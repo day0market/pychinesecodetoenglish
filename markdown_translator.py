@@ -1,45 +1,37 @@
-import re
 import time
 
 from abstract_translator import GoogleTranslator
 
 
 class MarkdownTranslator(GoogleTranslator):
+    symbols_in_request = 2000
 
-    def get_result(self) -> str:
-        if len(self.content) > 2000:
-            return self._do_chunks()
+    def translate(self, original: str) -> str:
+        if len(original) > self.symbols_in_request:
+            return self._do_chunks(original)
 
-        return self._translate(self.content)
-
-    def _translate(self, original: str) -> str:
-        translated = self.translate_str(original)
+        translated = self.get_provider_answer(original)
         time.sleep(0.5)
-        return self.fix_uppercase(translated)
+        return translated
 
-    def _do_chunks(self) -> str:
-        text_left = self.content
+    def _do_chunks(self, original) -> str:
+        text_left = original
         ready = ''
         while True:
             time.sleep(0.5)
-            if len(text_left) < 2000:
-                ready += self._translate(text_left)
+            if len(text_left) < self.symbols_in_request:
+                ready += self.get_provider_answer(text_left)
                 break
 
-            buffer = text_left[:1800]
+            buffer = text_left[:self.symbols_in_request-200]
 
             # Loop util nearest dot. Than translate and cut text
-            for i, c in enumerate(text_left[1800:2000]):
+            for i, c in enumerate(text_left[self.symbols_in_request-200:self.symbols_in_request]):
                 buffer += c
                 if c == '.':
-                    text_left = text_left[1800 + i:]
+                    text_left = text_left[self.symbols_in_request-200 + i:]
                     break
 
-            ready += self._translate(buffer)
+            ready += self.get_provider_answer(buffer)
 
         return ready
-
-    @staticmethod
-    def fix_uppercase(translated: str) -> str:
-        translated = translated[0].lower() + translated[1:]
-        return re.sub(r'\s{2,}\b\w', lambda x: x.group().lower(), translated)

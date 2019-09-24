@@ -1,13 +1,13 @@
+import argparse
 import logging
 import os
 import shutil
-import sys
 
 from markdown_translator import MarkdownTranslator
 from pyfile_translator import PyFileTranslator
 
 
-def ignore_folder(folder):
+def ignore_folder(folder) -> bool:
     if '__pycache__' in folder or '.git' in folder:
         return True
     return False
@@ -32,7 +32,7 @@ def translate_file(base_dir, rel_path, save_dir, file_name):
 
 
 def run(base_dir, save_dir, force=False):
-    extensions = {'py', 'md'}
+    extensions = {'md'}
     for dir_name, _, files in os.walk(base_dir):
         if ignore_folder(dir_name):
             continue
@@ -54,13 +54,12 @@ def run(base_dir, save_dir, force=False):
 
 
 if __name__ == '__main__':
-    dest = r'D:\translated\vnpy'  # sys.argv[0]
-    src = r'D:\Cloned\vnpy'
+    parser = argparse.ArgumentParser(description='Translate chinese code to english', add_help=True)
+    parser.add_argument('source_path', type=str, help='path to package you want to translate')
+    parser.add_argument('destination_path', type=str, help='path where you want to put translated file')
+    parser.add_argument('--level', help='logging level', default='WARNING')
+    parser.add_argument('--force', help='force re translate if file already exists', default=False, action='store_true')
 
-    try:
-        level = sys.argv[2]
-        logging.basicConfig(level=level)
-    except IndexError:
-        logging.basicConfig(level='INFO')
-
-    run(src, dest)
+    args = parser.parse_args()
+    logging.basicConfig(level=args.level)
+    run(args.source_path, args.destination_path, force=args.force)

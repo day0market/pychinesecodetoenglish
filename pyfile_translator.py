@@ -1,5 +1,3 @@
-import re
-
 from abstract_translator import GoogleTranslator
 
 
@@ -11,31 +9,9 @@ class PyFileTranslator(GoogleTranslator):
         diff = chars - {'"', "'"}
         return len(diff) == 0
 
-    def _translate(self, original):
+    def translate(self, original):
         if not original or self._is_empty_match(original):
             return original
 
-        translated = self.translate_str(original)
-        translated = self.fix_uppercase_in_format_strings(original, translated)
+        translated = self.get_provider_answer(original)
         return f' {translated.lower()} '
-
-    @staticmethod
-    def fix_uppercase_in_format_strings(original, translated):
-        if '{' not in original:
-            return translated
-
-        template_names = re.findall('{\w*}', original)  # all template usages
-
-        for t in template_names:
-            t_upper = t[0] + t[1].upper() + t[2:]  # make title case
-            translated = translated.replace(t_upper, t)
-
-        return translated
-
-    def get_result(self):
-        res = re.sub(u'[\u4e00-\u9fff]+', lambda x: self._translate(x.group()), self.content)
-        #res = re.sub(r"'''(\s*|.*)*'''", lambda x: self._translate(x.group()), res)
-        #res = re.sub(r"'(.*|\s*)'", lambda x: self._translate(x.group()), res)
-        #res = re.sub(r'"(.*|\s*)"', lambda x: self._translate(x.group()), res)
-        #res = re.sub(r'#.+', lambda x: self._translate(x.group()), res)
-        return res

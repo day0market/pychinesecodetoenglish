@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 import time
 from typing import List
 
@@ -8,14 +9,9 @@ from googletrans import Translator
 
 class AbstractTranslator:
 
-    def __init__(self, path: str, translate_strings: bool = True, language: str = 'en', encoding: str = "utf8"):
+    def __init__(self, path: str, language: str = 'en', encoding: str = "utf8"):
         self.__content = self._read_file(path, encoding)
-        self.__do_strings = translate_strings
         self.__lang = language.lower()
-
-    @property
-    def do_strings(self) -> bool:
-        return self.__do_strings
 
     @property
     def lang(self) -> str:
@@ -31,7 +27,7 @@ class AbstractTranslator:
             data = f.read()
         return data
 
-    def translate_str(self, original: str) -> str:
+    def get_provider_answer(self, original: str) -> str:
         raise NotImplementedError()
 
     def get_result(self) -> str:
@@ -39,9 +35,12 @@ class AbstractTranslator:
 
 
 class GoogleTranslator(AbstractTranslator):
+    """
+    Free translation by Google translate with package `googletrans`
+    """
 
-    def __init__(self, path: str, translate_strings: bool = True, language: str = 'en', encoding: str = "utf8"):
-        super().__init__(path, translate_strings, language, encoding)
+    def __init__(self, path: str, language: str = 'en', encoding: str = "utf8"):
+        super().__init__(path, language, encoding)
         self._translator = Translator(service_urls=self._get_google_urls())
 
     @staticmethod
@@ -52,7 +51,7 @@ class GoogleTranslator(AbstractTranslator):
 
         return domains
 
-    def translate_str(self, original: str) -> str:
+    def get_provider_answer(self, original: str) -> str:
         tries = 0
         while tries < 15:
             try:
@@ -62,5 +61,9 @@ class GoogleTranslator(AbstractTranslator):
                 tries += 1
                 time.sleep(60 * 5)
 
-    def get_result(self) -> str:
+    def translate(self, original: str) -> str:
         raise NotImplementedError()
+
+    def get_result(self):
+        res = re.sub(u'[\u4e00-\u9fff]+', lambda x: self.translate(x.group()), self.content)
+        return res
