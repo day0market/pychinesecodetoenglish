@@ -32,7 +32,7 @@ def translate_file(base_dir, rel_path, save_dir, file_name):
 
 
 def run(base_dir, save_dir, force=False):
-    extensions = {'md'}
+    extensions = {'md', 'py'}
     for dir_name, _, files in os.walk(base_dir):
         if ignore_folder(dir_name):
             continue

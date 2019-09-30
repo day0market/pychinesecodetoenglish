@@ -12,7 +12,7 @@ class MarkdownTranslator(GoogleTranslator):
 
         translated = self.get_provider_answer(original)
         time.sleep(0.5)
-        return translated
+        return f" {translated.lower()} "
 
     def _do_chunks(self, original) -> str:
         text_left = original
@@ -20,7 +20,7 @@ class MarkdownTranslator(GoogleTranslator):
         while True:
             time.sleep(0.5)
             if len(text_left) < self.symbols_in_request:
-                ready += self.get_provider_answer(text_left)
+                ready += f' {self.get_provider_answer(text_left).lower()} '
                 break
 
             buffer = text_left[:self.symbols_in_request-200]
